@@ -73,6 +73,19 @@ exports.ensureIsAdminPrincipal = async (req, res, next) => {
     }
 }
 
+exports.ensureIsNotSupervisor = async (req, res, next) => {
+    try {
+        if (req.user.rol == USER_ROLES.SUPERVISOR) {
+            return res.status(403).send({ message: 'No tienes permiso para acceder' });
+        }
+
+        next();
+    } catch (error) {
+        console.error(error);
+        return res.status(403).send({ message: error.message });
+    }
+}
+
 function getPayload(req) {
     let token = req.headers.authorization.replace(/['"]+/g, '');
     return jwt.verify(token, process.env.JWT_SECRET_KEY);

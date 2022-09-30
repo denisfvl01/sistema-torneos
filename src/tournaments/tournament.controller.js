@@ -100,9 +100,10 @@ exports.updateTournament = async (req, res) => {
             usuario: params.usuario,
             equipos: params.equipos
         }
+
         const tournamentExist = await Tournament.findOne({ _id: tournamentId });
         if (!tournamentExist) {
-            return res.status(404).send({ message: 'No se encontró el torneo' })
+            return res.status(404).send({ message: 'No se encontró el torneo' });
         }
 
         if (req.user.rol == USER_ROLES.USER) {
@@ -110,10 +111,15 @@ exports.updateTournament = async (req, res) => {
                 return res.status(403).send({ message: 'No tiene permiso para editar torneo' });
             }
         }
-        if (!getUserByIdI(updateTournamentObject.usuario)) {
 
+        if (!getUserByIdI(updateTournamentObject.usuario)) {
+            return res.status(404).send({ message: 'Usuario a asignar torneo no encontrado' });
         }
-        const tournament = await Tournament.findOneAndUpdate({ _id: tournamentId }, updateTournamentObject, { new: true });
+
+        const tournament = await Tournament
+            .findOneAndUpdate({ _id: tournamentId }, updateTournamentObject, { new: true })
+            .populate('usuario', 'DPI nombre apellido usuario');
+
         return res.send({ tournament });
     } catch (err) {
         console.error(err);
@@ -121,9 +127,20 @@ exports.updateTournament = async (req, res) => {
     }
 }
 
-exports.deleteTournament = async (req, res) => {
+exports.deactivateTournament = async (req, res) => {
     try {
+        const tournamentId = req.params.id;
+        const tournamentExist = await Tournament.findOne({ _id: tournamentId }).populate('usuario', 'DPI nombre apellido usuario');
+        if (!tournamentExist) {
+            return res.status(404).send({ message: 'No se encontró el torneo' });
+        }
 
+        if (req.user.rol == USER_ROLES.USER && tournamentExist.usuario != req.user._id) {
+            return res.status(403).send({ message: 'No tiene permiso para editar torneo' });
+        }
+
+        const tournament = await Tournament.findOneAndUpdate({ _id: tournamentId }, { activo: false }, { new: true });
+        return res.send({ tournament });
     } catch (err) {
         console.error(err);
         return res.status(500).send({ message: 'Error eliminando torneo' });
