@@ -1,0 +1,7 @@
+'use strict';
+
+exports.USER_ROLES = {
+    ADMINISTRATOR: 'ADMINISTRADOR',
+    USER: 'USUARIO',
+    SUPERVISOR: 'SUPERVISOR',
+};
